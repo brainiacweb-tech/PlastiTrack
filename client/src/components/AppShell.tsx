@@ -53,7 +53,7 @@ export function AppShell() {
       {mobileOpen && <button className="mobile-scrim" aria-label="Close navigation" onClick={() => setMobileOpen(false)} />}
       <aside className={`sidebar ${mobileOpen ? 'sidebar-open' : ''}`}>
         <Link to="/app" className="brand-lockup" onClick={() => setMobileOpen(false)}>
-          <img className="brand-image" src="/plastitrack-logo.png?v=2" alt="PlastiTrack — Track, Collect, Recycle. A Cleaner Ghana, A Greener Tomorrow." />
+          <img className="brand-image" src={`${import.meta.env.BASE_URL}plastitrack-logo.png?v=2`} alt="PlastiTrack — Track, Collect, Recycle. A Cleaner Ghana, A Greener Tomorrow." />
         </Link>
         <div className="workspace-label">WORKSPACE</div>
         <nav className="side-nav" aria-label="Workspace navigation">

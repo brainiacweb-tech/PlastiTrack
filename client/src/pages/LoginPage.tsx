@@ -42,7 +42,7 @@ export function LoginPage() {
     <div className="login-page">
       <div className="login-visual">
         <Link to="/" className="brand-lockup brand-lockup-light">
-          <img className="brand-image" src="/plastitrack-logo.png?v=2" alt="PlastiTrack — Track, Collect, Recycle." />
+          <img className="brand-image" src={`${import.meta.env.BASE_URL}plastitrack-logo.png?v=2`} alt="PlastiTrack — Track, Collect, Recycle." />
         </Link>
         <div className="login-visual-content">
           <div className="eyebrow eyebrow-light"><span className="eyebrow-dot" /> INTELLIGENT WASTE INFRASTRUCTURE</div>

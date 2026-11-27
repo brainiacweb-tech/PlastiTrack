@@ -109,7 +109,7 @@ export function PublicPage({ page }: { page?: PublicPageKey }) {
   return (
     <div className="public-site">
       <header className="public-nav">
-        <Link to="/" className="brand-lockup" onClick={() => setMobileMenuOpen(false)}><img className="brand-image" src="/plastitrack-logo.png?v=2" alt="PlastiTrack — Track, Collect, Recycle. A Cleaner Ghana, A Greener Tomorrow." /></Link>
+        <Link to="/" className="brand-lockup" onClick={() => setMobileMenuOpen(false)}><img className="brand-image" src={`${import.meta.env.BASE_URL}plastitrack-logo.png?v=2`} alt="PlastiTrack — Track, Collect, Recycle. A Cleaner Ghana, A Greener Tomorrow." /></Link>
         <nav className="public-links" aria-label="Main navigation">
           <Link to="/about">About</Link><Link to="/how-it-works">How it works</Link><Link to="/technology">Technology</Link><Link to="/impact">Impact</Link>
         </nav>
@@ -140,14 +140,14 @@ export function PublicPage({ page }: { page?: PublicPageKey }) {
             {activePage === 'how' ? (
               <figure className="prototype-figure how-video-figure">
                 <video controls playsInline preload="metadata" aria-label="PlastiTrack how-it-works video">
-                  <source src="/plastitrack-how-it-works.mp4?v=2" type="video/mp4" />
+                  <source src={`${import.meta.env.BASE_URL}plastitrack-how-it-works.mp4?v=2`} type="video/mp4" />
                   Your browser does not support embedded video.
                 </video>
                 <figcaption><span>HOW IT WORKS</span> A short walkthrough of the PlastiTrack collection process.</figcaption>
               </figure>
             ) : activePage === 'technology' ? (
               <figure className="prototype-figure">
-                <img src="/plastitrack-prototype.png" alt="Concept rendering of a PlastiTrack smart-bin sensor, solar panel, sealed housing, and internal electronics." />
+                <img src={`${import.meta.env.BASE_URL}plastitrack-prototype.png`} alt="Concept rendering of a PlastiTrack smart-bin sensor, solar panel, sealed housing, and internal electronics." />
                 <figcaption><span>PROTOTYPE CONCEPT</span> Illustrative design; hardware is not deployed in this demo.</figcaption>
               </figure>
             ) : (
@@ -307,7 +307,7 @@ function PublicFooter() {
         <div className="footer-main">
           <div className="footer-brand">
             <Link to="/" className="brand-lockup">
-              <img className="brand-image" src="/plastitrack-logo.png?v=2" alt="PlastiTrack — Track, Collect, Recycle." />
+              <img className="brand-image" src={`${import.meta.env.BASE_URL}plastitrack-logo.png?v=2`} alt="PlastiTrack — Track, Collect, Recycle." />
             </Link>
             <p>Smarter collection for a more circular future.</p>
             <span className="footer-brand-note">Built for clearer, more accountable waste operations.</span>

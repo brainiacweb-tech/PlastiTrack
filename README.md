@@ -23,6 +23,10 @@ All six role accounts use the password `PlastiTrack!2026`:
 
 Demo activity is saved in this browser's local storage. It is not shared with other browsers or devices. The administrator can restore the starter scenario from the Guided demonstration page. A completed collection creates recovered-plastic inventory; the recycling company can request it, and the administrator can progress the request.
 
+## GitHub Pages demo
+
+The browser-only demo is deployed at <https://brainiacweb-tech.github.io/PlastiTrack/>. Pushes to `main` build and deploy the client with GitHub Actions. Demo data remains in each visitor's browser; the optional Express/Prisma API is not deployed to GitHub Pages.
+
 ## Optional API development
 
 The Express/Prisma API is retained as a separate development component; the browser demo does not depend on it. Running the API requires PostgreSQL 15+, environment configuration, and database migrations:
