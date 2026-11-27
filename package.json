@@ -1,0 +1,17 @@
+{
+  "name": "plastitrack",
+  "private": true,
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w client",
+    "dev:api": "npm run dev -w server",
+    "build": "npm run build -w server && npm run build -w client",
+    "db:generate": "npm run db:generate -w server",
+    "db:migrate": "npm run db:migrate -w server",
+    "db:seed": "npm run db:seed -w server",
+    "demo:setup": "npm run db:generate && npm run db:deploy -w server && npm run db:seed"
+  }
+}

@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMINISTRATOR
+  COLLECTION_PARTNER
+  WASTE_COLLECTOR
+  RECYCLING_COMPANY
+  LOCATION_MANAGER
+  ENVIRONMENTAL_OFFICER
+}
+
+enum PlasticCategory {
+  PET
+  HDPE
+  LDPE
+  PP
+  MIXED
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+}
+
+enum BinStatus {
+  LOW
+  PARTIAL
+  FILLING_UP
+  NEARLY_FULL
+  FULL
+  DAMAGED
+}
+
+enum CollectionStatus {
+  PENDING
+  ACCEPTED
+  EN_ROUTE
+  ARRIVED
+  COLLECTING
+  COMPLETED
+  CANCELLED
+}
+
+enum RecyclingRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  PROCESSING
+  DISPATCHED
+  DELIVERED
+}
+
+model User {
+  id                  String             @id @default(cuid())
+  name                String
+  email               String             @unique
+  passwordHash        String
+  role                Role
+  region              String?
+  isActive            Boolean            @default(true)
+  collectionPartner   CollectionPartner? @relation(fields: [collectionPartnerId], references: [id])
+  collectionPartnerId String?
+  recyclingCompany    RecyclingCompany?  @relation(fields: [recyclingCompanyId], references: [id])
+  recyclingCompanyId  String?
+  collectorProfile    Collector?
+  collectorTasks      CollectionTask[]   @relation("AssignedCollector")
+  notifications       Notification[]
+  auditLogs           AuditLog[]
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+}
+
+model BinLocation {
+  id        String     @id @default(cuid())
+  name      String
+  region    String
+  address   String
+  latitude  Float
+  longitude Float
+  isDemo    Boolean    @default(true)
+  bins      SmartBin[]
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@index([region])
+}
+
+model SmartBin {
+  id                 String              @id @default(cuid())
+  code               String              @unique
+  name               String
+  location           BinLocation         @relation(fields: [locationId], references: [id])
+  locationId         String
+  category           PlasticCategory
+  fillPercent        Int                 @default(0)
+  capacityKg         Float
+  status             BinStatus           @default(LOW)
+  installedAt        DateTime
+  device             Device?
+  readings           SensorReading[]
+  tasks              CollectionTask[]
+  damageReports      DamageReport[]
+  collectionRequests CollectionRequest[]
+  inventory          PlasticInventory[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+
+  @@index([status, fillPercent])
+  @@index([locationId])
+}
+
+model Device {
+  id                String          @id @default(cuid())
+  deviceIdentifier  String          @unique
+  bin               SmartBin        @relation(fields: [binId], references: [id], onDelete: Cascade)
+  binId             String          @unique
+  status            DeviceStatus    @default(ONLINE)
+  lastCommunication DateTime        @default(now())
+  isSimulated       Boolean         @default(true)
+  readings          SensorReading[]
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+}
+
+model SensorReading {
+  id          String   @id @default(cuid())
+  device      Device   @relation(fields: [deviceId], references: [id], onDelete: Cascade)
+  deviceId    String
+  bin         SmartBin @relation(fields: [binId], references: [id], onDelete: Cascade)
+  binId       String
+  fillPercent Int
+  source      String   @default("SIMULATED")
+  recordedAt  DateTime @default(now())
+
+  @@index([binId, recordedAt])
+  @@index([deviceId, recordedAt])
+}
+
+model CollectionPartner {
+  id         String           @id @default(cuid())
+  name       String
+  region     String
+  users      User[]
+  collectors Collector[]
+  tasks      CollectionTask[]
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+}
+
+model Collector {
+  id        String            @id @default(cuid())
+  name      String
+  phone     String
+  partner   CollectionPartner @relation(fields: [partnerId], references: [id])
+  partnerId String
+  user      User?             @relation(fields: [userId], references: [id])
+  userId    String?           @unique
+  tasks     CollectionTask[]
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model CollectionTask {
+  id           String             @id @default(cuid())
+  bin          SmartBin           @relation(fields: [binId], references: [id])
+  binId        String
+  partner      CollectionPartner  @relation(fields: [partnerId], references: [id])
+  partnerId    String
+  collector    Collector?         @relation(fields: [collectorId], references: [id])
+  collectorId  String?
+  assignedTo   User?              @relation("AssignedCollector", fields: [assignedToId], references: [id])
+  assignedToId String?
+  status       CollectionStatus   @default(PENDING)
+  records      CollectionRecord[]
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+  completedAt  DateTime?
+
+  @@index([status, createdAt])
+  @@index([partnerId, status])
+  @@index([assignedToId, status])
+}
+
+model CollectionRecord {
+  id            String            @id @default(cuid())
+  task          CollectionTask    @relation(fields: [taskId], references: [id])
+  taskId        String            @unique
+  quantityKg    Float
+  evidenceUrl   String?
+  completedById String
+  completedAt   DateTime          @default(now())
+  inventory     PlasticInventory?
+}
+
+model PlasticInventory {
+  id                 String             @id @default(cuid())
+  category           PlasticCategory
+  quantityKg         Float
+  availableKg        Float
+  bin                SmartBin           @relation(fields: [binId], references: [id])
+  binId              String
+  collectionRecord   CollectionRecord   @relation(fields: [collectionRecordId], references: [id])
+  collectionRecordId String             @unique
+  requests           RecyclingRequest[]
+  collectedAt        DateTime           @default(now())
+  createdAt          DateTime           @default(now())
+
+  @@index([category, availableKg])
+}
+
+model RecyclingCompany {
+  id        String             @id @default(cuid())
+  name      String
+  region    String
+  users     User[]
+  requests  RecyclingRequest[]
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+}
+
+model RecyclingRequest {
+  id          String                 @id @default(cuid())
+  company     RecyclingCompany       @relation(fields: [companyId], references: [id])
+  companyId   String
+  inventory   PlasticInventory       @relation(fields: [inventoryId], references: [id])
+  inventoryId String
+  quantityKg  Float
+  status      RecyclingRequestStatus @default(PENDING)
+  delivery    Delivery?
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+}
+
+model Delivery {
+  id          String                 @id @default(cuid())
+  request     RecyclingRequest       @relation(fields: [requestId], references: [id])
+  requestId   String                 @unique
+  status      RecyclingRequestStatus @default(APPROVED)
+  trackingRef String?
+  updatedAt   DateTime               @updatedAt
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String
+  title     String
+  message   String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+}
+
+model DamageReport {
+  id          String    @id @default(cuid())
+  bin         SmartBin  @relation(fields: [binId], references: [id])
+  binId       String
+  reporterId  String
+  description String
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+}
+
+model CollectionRequest {
+  id          String   @id @default(cuid())
+  bin         SmartBin @relation(fields: [binId], references: [id])
+  binId       String
+  requesterId String
+  note        String?
+  createdAt   DateTime @default(now())
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  actorId    String?
+  action     String
+  entityType String
+  entityId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId, createdAt])
+}
