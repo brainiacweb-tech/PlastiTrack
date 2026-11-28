@@ -11,20 +11,20 @@ async function main() {
 
   const partner = await prisma.collectionPartner.upsert({
     where: { id: "demo-partner" },
-    update: {},
-    create: { id: "demo-partner", name: "Green Route Demo Partner", region: "Central" },
+    update: { name: "Asante Green Route", region: "Ashanti Region" },
+    create: { id: "demo-partner", name: "Asante Green Route", region: "Ashanti Region" },
   });
   const company = await prisma.recyclingCompany.upsert({
     where: { id: "demo-recycler" },
-    update: {},
-    create: { id: "demo-recycler", name: "Circular Materials Demo Co.", region: "Central" },
+    update: { name: "Kumasi Circular Materials", region: "Ashanti Region" },
+    create: { id: "demo-recycler", name: "Kumasi Circular Materials", region: "Ashanti Region" },
   });
   const accounts = [
     { id: "demo-admin", name: "Amina Owusu", email: "admin@plastitrack.demo", role: Role.ADMINISTRATOR },
     { id: "demo-partner-user", name: "Kwame Mensah", email: "partner@plastitrack.demo", role: Role.COLLECTION_PARTNER, collectionPartnerId: partner.id },
     { id: "demo-collector-user", name: "Abena Boateng", email: "collector@plastitrack.demo", role: Role.WASTE_COLLECTOR, collectionPartnerId: partner.id },
     { id: "demo-recycler-user", name: "Kofi Addo", email: "recycler@plastitrack.demo", role: Role.RECYCLING_COMPANY, recyclingCompanyId: company.id },
-    { id: "demo-manager", name: "Esi Nkrumah", email: "manager@plastitrack.demo", role: Role.LOCATION_MANAGER, region: "Central" },
+    { id: "demo-manager", name: "Esi Nkrumah", email: "manager@plastitrack.demo", role: Role.LOCATION_MANAGER, region: "Ashanti Region" },
     { id: "demo-officer", name: "Yaw Asante", email: "officer@plastitrack.demo", role: Role.ENVIRONMENTAL_OFFICER },
   ];
   for (const account of accounts) {
@@ -42,21 +42,21 @@ async function main() {
   });
 
   const locations = [
-    { id: "demo-location-central", name: "Central Market Demo Site", region: "Central", address: "Demonstration location — Central", latitude: 5.5601, longitude: -0.2057 },
-    { id: "demo-location-north", name: "North District Demo Site", region: "North", address: "Demonstration location — North", latitude: 5.6148, longitude: -0.1889 },
-    { id: "demo-location-coast", name: "Coastal District Demo Site", region: "Coastal", address: "Demonstration location — Coastal", latitude: 5.5350, longitude: -0.1810 },
+    { id: "demo-location-adum", name: "Adum Market Demonstration Site", region: "Ashanti Region", address: "Demonstration location — Adum, Kumasi", latitude: 6.6929, longitude: -1.6244 },
+    { id: "demo-location-bantama", name: "Bantama Market Demonstration Site", region: "Ashanti Region", address: "Demonstration location — Bantama, Kumasi", latitude: 6.7055, longitude: -1.6356 },
+    { id: "demo-location-asokwa", name: "Asokwa Community Demonstration Site", region: "Ashanti Region", address: "Demonstration location — Asokwa, Kumasi", latitude: 6.665, longitude: -1.601 },
   ];
   for (const location of locations) {
     await prisma.binLocation.upsert({ where: { id: location.id }, update: location, create: location });
   }
 
   const bins = [
-    { id: "demo-bin-001", code: "PT-001", name: "Central PET Station", locationId: locations[0].id, category: PlasticCategory.PET, fillPercent: 86, capacityKg: 120, status: BinStatus.NEARLY_FULL },
-    { id: "demo-bin-002", code: "PT-002", name: "North HDPE Point", locationId: locations[1].id, category: PlasticCategory.HDPE, fillPercent: 52, capacityKg: 100, status: BinStatus.PARTIAL },
-    { id: "demo-bin-003", code: "PT-003", name: "Coastal Mixed Plastics", locationId: locations[2].id, category: PlasticCategory.MIXED, fillPercent: 23, capacityKg: 150, status: BinStatus.LOW },
-    { id: "demo-bin-004", code: "PT-004", name: "North PP Collection", locationId: locations[1].id, category: PlasticCategory.PP, fillPercent: 93, capacityKg: 100, status: BinStatus.NEARLY_FULL },
-    { id: "demo-bin-005", code: "PT-005", name: "Central LDPE Station", locationId: locations[0].id, category: PlasticCategory.LDPE, fillPercent: 68, capacityKg: 100, status: BinStatus.FILLING_UP },
-    { id: "demo-bin-006", code: "PT-006", name: "Coastal PET Station", locationId: locations[2].id, category: PlasticCategory.PET, fillPercent: 0, capacityKg: 120, status: BinStatus.LOW },
+    { id: "demo-bin-001", code: "PT-001", name: "Adum PET Collection Point", locationId: locations[0].id, category: PlasticCategory.PET, fillPercent: 86, capacityKg: 120, status: BinStatus.NEARLY_FULL },
+    { id: "demo-bin-002", code: "PT-002", name: "Bantama HDPE Collection Point", locationId: locations[1].id, category: PlasticCategory.HDPE, fillPercent: 52, capacityKg: 100, status: BinStatus.PARTIAL },
+    { id: "demo-bin-003", code: "PT-003", name: "Asokwa Mixed Plastics Point", locationId: locations[2].id, category: PlasticCategory.MIXED, fillPercent: 23, capacityKg: 150, status: BinStatus.LOW },
+    { id: "demo-bin-004", code: "PT-004", name: "Bantama PP Collection Point", locationId: locations[1].id, category: PlasticCategory.PP, fillPercent: 93, capacityKg: 100, status: BinStatus.NEARLY_FULL },
+    { id: "demo-bin-005", code: "PT-005", name: "Adum LDPE Collection Point", locationId: locations[0].id, category: PlasticCategory.LDPE, fillPercent: 68, capacityKg: 100, status: BinStatus.FILLING_UP },
+    { id: "demo-bin-006", code: "PT-006", name: "Asokwa PET Collection Point", locationId: locations[2].id, category: PlasticCategory.PET, fillPercent: 0, capacityKg: 120, status: BinStatus.LOW },
   ];
   for (const bin of bins) {
     await prisma.smartBin.upsert({ where: { id: bin.id }, update: bin, create: { ...bin, installedAt: new Date("2025-01-15T00:00:00Z") } });

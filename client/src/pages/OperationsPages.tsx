@@ -12,6 +12,7 @@ import {
   ChevronDown,
   CircleAlert,
   CircleCheck,
+  CircleHelp,
   Clock3,
   Download,
   ExternalLink,
@@ -81,23 +82,41 @@ function useResource<T>(path: string, refreshKey = 0, enabled = true) {
   useEffect(() => {
     if (!enabled) return
     let active = true
-    void api<T>(path)
-      .then((value) => {
-        if (active) {
-          setData(value)
-          setError('')
-        }
-      })
-      .catch((reason: unknown) => {
-        if (active) setError(reason instanceof Error ? reason.message : 'Unable to load this information.')
-      })
-    return () => { active = false }
+    let pending = false
+    const load = () => {
+      if (pending) return
+      pending = true
+      void api<T>(path)
+        .then((value) => {
+          if (active) {
+            setData(value)
+            setError('')
+          }
+        })
+        .catch((reason: unknown) => {
+          if (active) setError(reason instanceof Error ? reason.message : 'Unable to load this information.')
+        })
+        .finally(() => { pending = false })
+    }
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === 'visible') load()
+    }
+    load()
+    const interval = window.setInterval(refreshWhenVisible, 5000)
+    window.addEventListener('focus', refreshWhenVisible)
+    document.addEventListener('visibilitychange', refreshWhenVisible)
+    return () => {
+      active = false
+      window.clearInterval(interval)
+      window.removeEventListener('focus', refreshWhenVisible)
+      document.removeEventListener('visibilitychange', refreshWhenVisible)
+    }
   }, [enabled, path, refreshKey])
   return { data: enabled ? data : null, error: enabled ? error : '', loading: enabled && data === null && error === '', reload }
 }
 
-function PageTitle({ eyebrow, title, description, action }: { eyebrow: string; title: string; description: string; action?: ReactNode }) {
-  return <div className="page-heading"><div><p className="section-kicker">{eyebrow}</p><h1>{title}</h1><p className="page-description">{description}</p></div>{action}</div>
+function PageTitle({ eyebrow, title, description, action, guide }: { eyebrow: string; title: string; description: string; action?: ReactNode; guide?: string }) {
+  return <div className="page-heading"><div className="page-heading-copy"><p className="section-kicker">{eyebrow}</p><h1>{title}</h1><p className="page-description">{description}</p>{guide && <details className="page-guide"><summary><CircleHelp size={14} /> How to read this page</summary><div className="page-guide-content"><p>{guide}</p><Link to="/app/demo" className="text-link">Read the full system guide <ArrowRight size={14} /></Link></div></details>}</div>{action}</div>
 }
 
 function ErrorState({ error, retry }: { error: string; retry?: () => void }) {
@@ -198,7 +217,7 @@ function AdministratorDashboard({ dashboard, bins, tasks }: { dashboard: Dashboa
   const onlineBins = bins.filter((bin) => bin.device?.status === 'ONLINE').length
 
   return <>
-    <PageTitle eyebrow="ADMINISTRATOR WORKSPACE" title="Network overview" description="Monitor network health, resolve collection alerts, and follow activity across every demo site." action={<Link to="/app/bins" className="button button-outline button-compact"><MapPin size={16} /> Manage network</Link>} />
+    <PageTitle eyebrow="ADMINISTRATOR WORKSPACE" title="Network overview" description="Monitor network health, resolve collection alerts, and follow activity across every demo site." guide="The four cards count registered bins, bins at or above 80% full, unfinished collection jobs, and kilograms recorded after completed collections. The chart shows completed collections by month. Priority alerts tell you which bin needs a check; device connectivity shows which simulated sensors are online. Use Manage network to inspect bins and try the simulator. Data refreshes every five seconds; all readings are simulated." action={<Link to="/app/bins" className="button button-outline button-compact"><MapPin size={16} /> Manage network</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Registered smart bins" value={metrics?.totalBins ?? 0} note="Across demonstration sites" icon={Signal} />
       <MetricCard label="Need attention" value={metrics?.binsRequiringCollection ?? 0} note="At or above 80% capacity" icon={CircleAlert} tone="amber" />
@@ -245,7 +264,7 @@ function PartnerDashboard({ bins, tasks }: { bins: Bin[]; tasks: CollectionTask[
   }
 
   return <>
-    <PageTitle eyebrow="COLLECTION PARTNER" title="Dispatch & team workload" description="Assign the next pickups, balance work across your team, and keep high-fill sites moving." action={<Link to="/app/collections" className="button button-primary button-compact"><Truck size={15} /> Manage assignments</Link>} />
+    <PageTitle eyebrow="COLLECTION PARTNER" title="Dispatch & team workload" description="Assign the next pickups, balance work across your team, and keep high-fill sites moving." guide="Waiting for assignment counts jobs that do not yet have a collector. Assigned and active counts jobs already given to a team member. Open the dispatch queue to choose an available collector; the team workload shows how many open jobs each person has. Sites to prioritize lists bins at least 80% full. Use Manage assignments to move a job through each collection step." action={<Link to="/app/collections" className="button button-primary button-compact"><Truck size={15} /> Manage assignments</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Waiting for assignment" value={waitingTasks.length} note="Tasks needing a collector" icon={CircleAlert} tone="amber" />
       <MetricCard label="Assigned and active" value={activeTasks.length} note="Work currently in progress" icon={Truck} tone="blue" />
@@ -273,7 +292,7 @@ function CollectorDashboard({ tasks }: { tasks: CollectionTask[] }) {
   const nextStep: Record<string, string> = { PENDING: 'Accept pickup', ACCEPTED: 'Start route', EN_ROUTE: 'Mark arrived', ARRIVED: 'Begin collection', COLLECTING: 'Record weight' }
 
   return <>
-    <PageTitle eyebrow="WASTE COLLECTOR" title="My collection route" description="See your assigned stops, the next action for each task, and your completed pickups." action={<Link to="/app/collections" className="button button-primary button-compact"><MapPin size={15} /> Open my route</Link>} />
+    <PageTitle eyebrow="WASTE COLLECTOR" title="My collection route" description="See your assigned stops, the next action for each task, and your completed pickups." guide="Open pickups are jobs that are not finished or cancelled. Your next stop is the first job waiting for you. Open the route to advance one step at a time: accept, travel, arrive, collect, then enter the weight in kilograms to finish. A completed pickup updates the bin and makes the material visible to recycling partners." action={<Link to="/app/collections" className="button button-primary button-compact"><MapPin size={15} /> Open my route</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Open pickups" value={activeTasks.length} note="Assigned to your account" icon={Truck} tone="blue" />
       <MetricCard label="Ready to start" value={activeTasks.filter((task) => task.status === 'PENDING' || task.status === 'ACCEPTED').length} note="Waiting for your next action" icon={Clock3} tone="amber" />
@@ -298,7 +317,7 @@ function RecyclerDashboard({ inventory, requests }: { inventory: DashboardInvent
   const openRequests = requests.filter((request) => !['DELIVERED', 'REJECTED'].includes(request.status))
 
   return <>
-    <PageTitle eyebrow="RECYCLING COMPANY" title="Recovered materials" description="Review available plastics, track your requests, and find the next material ready for recovery." action={<Link to="/app/marketplace" className="button button-primary button-compact"><Recycle size={15} /> Browse marketplace</Link>} />
+    <PageTitle eyebrow="RECYCLING COMPANY" title="Recovered materials" description="Review available plastics, track your requests, and find the next material ready for recovery." guide="Available material is plastic recorded after a collection. The kilogram total shows how much is still available to request; material categories tell you what type it is. Submit a request from the marketplace for the amount you need. Your request activity shows its progress. This is a demonstration workflow, not a real purchase or delivery." action={<Link to="/app/marketplace" className="button button-primary button-compact"><Recycle size={15} /> Browse marketplace</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Available material" value={`${availableKg.toFixed(1)} kg`} note="Ready to request" icon={PackageCheck} tone="lime" />
       <MetricCard label="Material categories" value={categoryCount} note="Types currently available" icon={Recycle} />
@@ -322,7 +341,7 @@ function LocationDashboard({ bins }: { bins: Bin[] }) {
   const averageFill = bins.length ? Math.round(bins.reduce((sum, bin) => sum + bin.fillPercent, 0) / bins.length) : 0
 
   return <>
-    <PageTitle eyebrow="LOCATION MANAGER" title="My site status" description="Monitor the bins at your location and see which ones may need collection or a connectivity check." action={<Link to="/app/bins" className="button button-outline button-compact"><Building2 size={15} /> View my bins</Link>} />
+    <PageTitle eyebrow="LOCATION MANAGER" title="My site status" description="Monitor the bins at your location and see which ones may need collection or a connectivity check." guide="This view is limited to the bins assigned to your location. A fill level of 80% or more means the collection team should be contacted. Offline means the simulated device has stopped reporting; it does not mean the bin itself is unavailable. Share the bin code when asking your collection partner for help." action={<Link to="/app/bins" className="button button-outline button-compact"><Building2 size={15} /> View my bins</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Bins at my site" value={bins.length} note="Visible to your account" icon={Building2} />
       <MetricCard label="Needs collection" value={attentionBins.length} note="At or above 80% full" icon={CircleAlert} tone="amber" />
@@ -342,7 +361,7 @@ function OfficerDashboard({ analytics }: { analytics: DashboardAnalytics | null 
   const categoryRows = analytics?.categoryDistribution ?? []
 
   return <>
-    <PageTitle eyebrow="ENVIRONMENTAL OFFICER" title="Recovery & impact snapshot" description="Review recovered material, geographic distribution, and collection trends across the demonstration network." action={<Link to="/app/analytics" className="button button-primary button-compact"><Leaf size={15} /> Full impact report</Link>} />
+    <PageTitle eyebrow="ENVIRONMENTAL OFFICER" title="Recovery & impact snapshot" description="Review recovered material, geographic distribution, and collection trends across the demonstration network." guide="Plastic recovered is the total weight entered when collection tasks were completed; completed collections counts those records. The monthly chart groups recorded kilograms by month, and the material list groups them by plastic type. The regional snapshot groups demo records by Kumasi area. These are simulated operational figures, not independently verified environmental impact." action={<Link to="/app/analytics" className="button button-primary button-compact"><Leaf size={15} /> Full impact report</Link>} />
     <div className="metrics-grid">
       <MetricCard label="Plastic recovered" value={`${(metrics?.totalCollectedKg ?? 0).toLocaleString()} kg`} note="Recorded completed collections" icon={PackageCheck} tone="lime" />
       <MetricCard label="Completed collections" value={metrics?.completedCollections ?? 0} note="Verified demo records" icon={CheckCheck} tone="blue" />
@@ -377,7 +396,7 @@ export function BinsPage() {
   const [registering, setRegistering] = useState(false)
   const [registerValues, setRegisterValues] = useState({
     code: '', name: '', locationName: '', region: '', address: '',
-    latitude: '5.5601', longitude: '-0.2057', category: 'PET',
+    latitude: '6.6929', longitude: '-1.6244', category: 'PET',
     capacityKg: '120', deviceIdentifier: '',
   })
   const isAdmin = user?.role === 'ADMINISTRATOR'
@@ -417,7 +436,7 @@ export function BinsPage() {
       setRegisterOpen(false)
       setRegisterValues({
         code: '', name: '', locationName: '', region: '', address: '',
-        latitude: '5.5601', longitude: '-0.2057', category: 'PET',
+        latitude: '6.6929', longitude: '-1.6244', category: 'PET',
         capacityKg: '120', deviceIdentifier: '',
       })
       setMessage('Smart bin registered in the demonstration network.')
@@ -436,7 +455,7 @@ export function BinsPage() {
   }), [data])
 
   return <div className="page-stack">
-    <PageTitle eyebrow="ASSET MANAGEMENT" title="Smart bins" description="Monitor fill levels, connectivity, and collection readiness across the demo network." action={isAdmin ? <button className="button button-primary button-compact" onClick={() => setRegisterOpen(true)}><Plus size={16} /> Register a bin</button> : undefined} />
+    <PageTitle eyebrow="ASSET MANAGEMENT" title="Smart bins" description="Monitor fill levels, connectivity, and collection readiness across the demo network." guide="Each row is one bin. Its fill percentage is how full it is; bins at 80% or higher need collection. Offline means its simulated sensor is not communicating. Search by bin code, name, or site, or use the filter to narrow the list. Select a bin code for its recent readings. Administrators can use the controls below to test sensor changes; they do not control physical bins. Updates refresh every five seconds." action={isAdmin ? <button className="button button-primary button-compact" onClick={() => setRegisterOpen(true)}><Plus size={16} /> Register a bin</button> : undefined} />
     <div className="bin-summary-row"><span><b>{counts.all}</b> registered bins</span><span><i className="summary-dot summary-alert" /> <b>{counts.attention}</b> need collection</span><span><i className="summary-dot summary-offline" /> <b>{counts.offline}</b> offline</span><span className="demo-caption"><Radio size={14} /> Simulated network</span></div>
     <section className="panel">
       <div className="table-toolbar"><div className="search-field"><Search size={16} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by bin, site or code…" /></div><div className="toolbar-right"><Filter size={15} /><select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter bins by status"><option value="ALL">All statuses</option><option value="NEARLY_FULL">Needs collection</option><option value="FILLING_UP">Filling up</option><option value="PARTIAL">Partially filled</option><option value="LOW">Low</option><option value="OFFLINE">Offline devices</option></select><button className="icon-button" onClick={() => void reload()} title="Refresh bins"><RefreshCw size={16} /></button></div></div>
@@ -459,7 +478,7 @@ export function BinsPage() {
       {bins.slice(0, 6).map((bin, index) => <button key={bin.id} className={`demo-map-marker map-marker-${index + 1} ${bin.fillPercent >= 80 ? 'map-marker-alert' : ''}`} onClick={() => setSelected(bin)} title={`${bin.code}: ${bin.fillPercent}%`}>
         <MapPin size={19} fill="currentColor" /><span>{bin.code}</span>
       </button>)}
-      <div className="map-location-label label-central">Central demo area</div><div className="map-location-label label-north">North demo area</div><div className="map-location-label label-coastal">Coastal demo area</div><div className="map-disclaimer">Illustrative map · Demonstration coordinates</div>
+      <div className="map-location-label label-central">Adum</div><div className="map-location-label label-north">Bantama</div><div className="map-location-label label-coastal">Asokwa</div><div className="map-disclaimer">Illustrative map · Demonstration coordinates</div>
     </div></section>
     {isAdmin && <section className="panel simulator-panel"><div className="panel-header"><div><h2>IoT simulation controls</h2><p>Adjust a selected demo sensor. Readings are labelled simulated and stored in telemetry history.</p></div><span className="simulation-badge"><Radio size={14} /> SIMULATION MODE</span></div>
       <div className="simulator-bin-grid">{(data?.bins ?? []).map((bin) => <div className="simulator-bin" key={bin.id}><div><strong>{bin.code}</strong><small>{bin.fillPercent}% · {bin.device?.status ?? 'No device'}</small></div><div className="simulator-actions"><button title="Decrease by 10%" disabled={busy === bin.id} onClick={() => void simulate(bin, 'decrease')}><ArrowDownRight size={15} /></button><button title="Increase by 10%" disabled={busy === bin.id} onClick={() => void simulate(bin, 'increase')}><ArrowUpRight size={15} /></button><button title="Set to 100%" disabled={busy === bin.id} onClick={() => void simulate(bin, 'set', 100)}>100%</button><button title={bin.device?.status === 'OFFLINE' ? 'Restore connectivity' : 'Simulate offline'} disabled={busy === bin.id} onClick={() => void simulate(bin, bin.device?.status === 'OFFLINE' ? 'online' : 'offline')}>{bin.device?.status === 'OFFLINE' ? <Signal size={15} /> : <WifiOff size={15} />}</button></div></div>)}</div>
@@ -470,12 +489,12 @@ export function BinsPage() {
       <p className="muted-copy">New records are labelled as demonstration locations with simulated telemetry.</p>
       <form className="register-form" onSubmit={(event) => void registerBin(event)}>
         <label>Bin code<input required minLength={2} maxLength={32} value={registerValues.code} onChange={(event) => setRegisterValues({ ...registerValues, code: event.target.value })} placeholder="PT-007" /></label>
-        <label>Bin name<input required value={registerValues.name} onChange={(event) => setRegisterValues({ ...registerValues, name: event.target.value })} placeholder="Central PET Station" /></label>
+        <label>Bin name<input required value={registerValues.name} onChange={(event) => setRegisterValues({ ...registerValues, name: event.target.value })} placeholder="Adum PET Collection Point" /></label>
         <label>Plastic category<select value={registerValues.category} onChange={(event) => setRegisterValues({ ...registerValues, category: event.target.value })}><option value="PET">PET bottles</option><option value="HDPE">HDPE plastics</option><option value="LDPE">LDPE plastics</option><option value="PP">PP plastics</option><option value="MIXED">Mixed plastics</option></select></label>
         <label>Maximum capacity (kg)<input required type="number" min="1" step="1" value={registerValues.capacityKg} onChange={(event) => setRegisterValues({ ...registerValues, capacityKg: event.target.value })} /></label>
-        <label>Demonstration site<input required value={registerValues.locationName} onChange={(event) => setRegisterValues({ ...registerValues, locationName: event.target.value })} placeholder="Central District Demo Site" /></label>
-        <label>Region<input required value={registerValues.region} onChange={(event) => setRegisterValues({ ...registerValues, region: event.target.value })} placeholder="Central" /></label>
-        <label>Site description<input required value={registerValues.address} onChange={(event) => setRegisterValues({ ...registerValues, address: event.target.value })} placeholder="Demonstration location — Central" /></label>
+        <label>Demonstration site<input required value={registerValues.locationName} onChange={(event) => setRegisterValues({ ...registerValues, locationName: event.target.value })} placeholder="Adum Market Demonstration Site" /></label>
+        <label>Region<input required value={registerValues.region} onChange={(event) => setRegisterValues({ ...registerValues, region: event.target.value })} placeholder="Ashanti Region" /></label>
+        <label>Site description<input required value={registerValues.address} onChange={(event) => setRegisterValues({ ...registerValues, address: event.target.value })} placeholder="Demonstration location — Adum, Kumasi" /></label>
         <label>Device identifier<input required minLength={3} value={registerValues.deviceIdentifier} onChange={(event) => setRegisterValues({ ...registerValues, deviceIdentifier: event.target.value })} placeholder="PT-DEMO-007" /></label>
         <div className="register-form-actions"><button type="button" className="button button-outline" onClick={() => setRegisterOpen(false)}>Cancel</button><button type="submit" className="button button-primary" disabled={registering}>{registering ? 'Registering…' : 'Register bin'}</button></div>
       </form>
@@ -534,7 +553,7 @@ export function CollectionsPage() {
   }
 
   return <div className="page-stack">
-    <PageTitle eyebrow="FIELD OPERATIONS" title="Collection operations" description="Assign collection work and follow tasks from recommendation through verified completion." action={<span className="simulation-badge"><Truck size={14} /> COLLECTION LIFECYCLE</span>} />
+    <PageTitle eyebrow="FIELD OPERATIONS" title="Collection operations" description="Assign collection work and follow tasks from recommendation through verified completion." guide="A collection task appears when a bin reaches 80% full. Each task moves through the listed statuses in order: pending, accepted, en route, arrived, collecting, and completed. Partners assign a collector; collectors update their own assigned jobs. Enter the collected weight in kilograms to complete a task. That completion resets the bin and adds its material to the marketplace. No real collection is dispatched by this demo." action={<span className="simulation-badge"><Truck size={14} /> COLLECTION LIFECYCLE</span>} />
     <div className="collection-callout"><span className="callout-icon"><CircleAlert size={18} /></span><div><strong>Collection recommendations are created at 80% fill.</strong><p>A bin’s fill level resets only after an authorized task is completed with a collected quantity.</p></div></div>
     {message && <div className="inline-message" role="status">{message}<button onClick={() => setMessage('')} aria-label="Dismiss">×</button></div>}
     {error && <ErrorState error={error} retry={() => void reload()} />}
@@ -598,7 +617,7 @@ export function MarketplacePage() {
   }
 
   return <div className="page-stack">
-    <PageTitle eyebrow="MATERIAL RECOVERY" title="Recycling marketplace" description="Connect available recovered plastic with recycling demand and keep each request traceable." action={<span className="inventory-total"><PackageCheck size={17} /> {inventory.reduce((total, item) => total + item.availableKg, 0).toFixed(1)} kg available</span>} />
+    <PageTitle eyebrow="MATERIAL RECOVERY" title="Recycling marketplace" description="Connect available recovered plastic with recycling demand and keep each request traceable." guide="Each card represents plastic recorded from a completed demo collection. Available kilograms are the portion not already reserved by another request. Recycling companies enter a quantity and select Request; administrators move requests through approval, processing, dispatch, and delivery. These actions change demo records only—there is no payment, shipment, or real-world order." action={<span className="inventory-total"><PackageCheck size={17} /> {inventory.reduce((total, item) => total + item.availableKg, 0).toFixed(1)} kg available</span>} />
     {message && <div className="inline-message" role="status">{message}<button onClick={() => setMessage('')} aria-label="Dismiss">×</button></div>}
     {error && <ErrorState error={error} retry={() => void reload()} />}
     <section><div className="section-row-title"><div><h2>Available recovered plastic</h2><p>Collected material that can be requested for recycling</p></div><button className="icon-button" onClick={() => setRefresh((value) => value + 1)} title="Refresh inventory"><RefreshCw size={16} /></button></div>
@@ -650,7 +669,7 @@ export function AnalyticsPage() {
   }
   const monthData = data?.monthlyCollections.map((item) => ({ ...item, month: new Date(`${item.month}-01T00:00:00`).toLocaleDateString('en', { month: 'short' }) })) ?? []
   return <div className="page-stack">
-    <PageTitle eyebrow="ENVIRONMENTAL INTELLIGENCE" title="Impact & analytics" description="Understand recovered materials, site performance, and collection progress across the demo network." action={<div className="export-actions"><button className="button button-outline button-compact" onClick={() => window.print()}><Download size={15} /> Print / save PDF</button><button className="button button-dark button-compact" onClick={() => void exportCsv()} disabled={exporting}><Download size={15} /> {exporting ? 'Preparing…' : 'Export CSV'}</button></div>} />
+    <PageTitle eyebrow="ENVIRONMENTAL INTELLIGENCE" title="Impact & analytics" description="Understand recovered materials, site performance, and collection progress across the demo network." guide="Plastic collected is the total kilograms entered on completed collection tasks. The monthly chart groups that weight by month; material mix groups it by plastic type; regional performance groups it by demo area. Bin status shows how many bins are in each fill-level category. Use Export CSV to download the records, or Print / save PDF for a printable report. All figures are simulated and are not verified environmental outcomes." action={<div className="export-actions"><button className="button button-outline button-compact" onClick={() => window.print()}><Download size={15} /> Print / save PDF</button><button className="button button-dark button-compact" onClick={() => void exportCsv()} disabled={exporting}><Download size={15} /> {exporting ? 'Preparing…' : 'Export CSV'}</button></div>} />
     {error && <ErrorState error={error} retry={() => void reload()} />}
     {loading && !data ? <LoadingState /> : <>
       <div className="metrics-grid analytics-metrics"><MetricCard label="Plastic collected" value={`${(data?.metrics.totalCollectedKg ?? 0).toLocaleString()} kg`} note="Verified completed collections" icon={PackageCheck} /><MetricCard label="Completed collections" value={data?.metrics.completedCollections ?? 0} note="Recorded collection tasks" icon={CheckCheck} tone="blue" /><MetricCard label="Active bin network" value={data?.metrics.totalBins ?? 0} note="Registered demo devices" icon={Signal} tone="lime" /><MetricCard label="Average fill level" value={`${data?.metrics.averageFillPercent ?? 0}%`} note="Current network average" icon={Activity} tone="amber" /></div>
@@ -682,7 +701,7 @@ export function NotificationsPage() {
   }
   const items = data?.notifications ?? []
   return <div className="page-stack">
-    <PageTitle eyebrow="ACTIVITY CENTRE" title="Notifications" description="Follow alerts and operational events connected to your role." action={<span className="request-count">{items.filter((item) => !item.readAt).length} unread</span>} />
+    <PageTitle eyebrow="ACTIVITY CENTRE" title="Notifications" description="Follow alerts and operational events connected to your role." guide="Each message explains an event that may need your attention. Select its arrow to open the related page. Choose Mark read after you have reviewed it; unread is only a reminder and does not change the bin or collection. New alerts appear here as demo activity changes." action={<span className="request-count">{items.filter((item) => !item.readAt).length} unread</span>} />
     {error && <ErrorState error={error} retry={() => void reload()} />}
     {loading && !data ? <LoadingState /> : <section className="panel notification-list">{items.map((item) => <article className={`notification-item ${!item.readAt ? 'notification-unread' : ''}`} key={item.id}><span className="notification-icon"><Bell size={17} /></span><div className="notification-copy"><strong>{item.title}</strong><p>{item.message}</p><time>{formatDate(item.createdAt)}</time></div><div className="notification-actions">{!item.readAt && <button className="text-button" disabled={busy === item.id} onClick={() => void markRead(item)}><Check size={15} /> Mark read</button>}{item.href && <Link to={item.href} className="icon-button" aria-label="Open related page"><ArrowRight size={16} /></Link>}</div></article>)}{!items.length && <div className="empty-state"><Bell size={24} /><strong>You’re all caught up</strong><span>New alerts will appear here when bin or collection activity needs attention.</span></div>}</section>}
   </div>
@@ -705,20 +724,37 @@ export function DemoGuidePage() {
     setStatus('')
     try {
       await api('/demo/reset', { method: 'POST' })
-      setStatus('Demonstration data has been reset. Reload the page to see the original scenario.')
+      setStatus('Demonstration data has been reset. The dashboard will update automatically.')
     } catch (reason) {
       setStatus(reason instanceof Error ? reason.message : 'Demo data could not be reset.')
     }
   }
   return <div className="page-stack">
-    <PageTitle eyebrow="COMPETITION MODE" title="Guided demonstration" description="A complete walkthrough from a sensor threshold to collection, recycling, and impact reporting." action={user?.role === 'ADMINISTRATOR' ? <button className="button button-outline button-compact" onClick={() => void resetDemo()}><RefreshCw size={15} /> Reset demo data</button> : undefined} />
-    <div className="demo-banner"><span className="simulation-badge"><Radio size={14} /> SIMULATION MODE</span><p>Every bin reading and location in this environment is demonstration data. No physical hardware is connected.</p></div>
+    <PageTitle eyebrow="PLAIN-LANGUAGE SYSTEM GUIDE" title="How to use PlastiTrack" description="A step-by-step explanation of the dashboards, collection process, recycling requests, and the numbers you see." action={user?.role === 'ADMINISTRATOR' ? <button className="button button-outline button-compact" onClick={() => void resetDemo()}><RefreshCw size={15} /> Reset demo data</button> : undefined} />
+    <div className="demo-banner"><span className="simulation-badge"><Radio size={14} /> DEMONSTRATION ONLY</span><p>This is a practice version of the system. No bins are connected, no trucks are dispatched, and no recycling orders are fulfilled. Dashboard information refreshes automatically every five seconds.</p></div>
     {status && <div className="inline-message" role="status">{status}</div>}
+    <section className="panel system-guide-panel"><div className="panel-header"><div><h2>The full journey, in everyday language</h2><p>Follow what happens from a bin filling up to a recycling request.</p></div><Recycle size={18} className="subtle-icon" /></div>
+      <ol className="system-guide-steps">
+        <li><strong>A bin reports its fill level.</strong><span>In this demo, the administrator changes a simulated reading. At 80% full, PlastiTrack raises a collection alert.</span></li>
+        <li><strong>A collection partner assigns the job.</strong><span>The partner chooses a waste collector so the team knows who is responsible for the pickup.</span></li>
+        <li><strong>The collector records the pickup.</strong><span>The collector moves through each status in order and enters the weight collected. The completed job resets the bin in the demo.</span></li>
+        <li><strong>Recovered plastic becomes available.</strong><span>The recorded weight appears in the recycling marketplace, where a recycling company can request some or all of it.</span></li>
+        <li><strong>Reports summarize the activity.</strong><span>Dashboards and analytics add up simulated collection records. They are useful for exploring the workflow, not proof of real-world impact.</span></li>
+      </ol>
+    </section>
+    <section className="panel guide-glossary"><div className="panel-header"><div><h2>Quick guide to common words</h2><p>What the labels and numbers mean.</p></div><CircleHelp size={17} className="subtle-icon" /></div><dl>
+      <div><dt>Fill level</dt><dd>How full a bin is, shown as a percentage. At 80% or more, the demo recommends collection.</dd></div>
+      <div><dt>Offline</dt><dd>The simulated bin device is not currently sending updates. It does not mean the physical bin is broken.</dd></div>
+      <div><dt>Collection task</dt><dd>A pickup job connected to a bin. It is complete after the collector records the collected weight.</dd></div>
+      <div><dt>Available material</dt><dd>Plastic weight left to request after any recycling requests have been reserved.</dd></div>
+      <div><dt>Regional performance</dt><dd>Demo collection totals grouped by the Kumasi locations shown in this prototype.</dd></div>
+      <div><dt>Live refresh</dt><dd>Dashboard data is checked every five seconds and when you return to the browser tab. The information is still simulated, not live sensor data.</dd></div>
+    </dl></section>
     <div className="scenario-grid">
       <article className="scenario-card"><span className="scenario-number">01</span><div className="scenario-icon"><Radio size={19} /></div><h2>Smart bin monitoring</h2><p>Raise a simulated device reading and watch the platform create an alert when a bin reaches collection threshold.</p><ol><li>Sign in as administrator</li><li>Open Smart bins and choose a sensor control</li><li>Set a bin to 100% and check notifications</li></ol><Link to="/app/bins" className="text-link">Open bin management <ArrowRight size={15} /></Link></article>
       <article className="scenario-card"><span className="scenario-number">02</span><div className="scenario-icon"><Truck size={19} /></div><h2>Waste collection</h2><p>Move an assigned task through the collection lifecycle. Completion records material and resets the bin.</p><ol><li>Sign in as collection partner and assign a collector</li><li>Sign in as that collector and advance each status</li><li>Enter the collected quantity to complete</li></ol><Link to="/app/collections" className="text-link">Open collection operations <ArrowRight size={15} /></Link></article>
       <article className="scenario-card"><span className="scenario-number">03</span><div className="scenario-icon"><PackageCheck size={19} /></div><h2>Recycling request</h2><p>Make recovered material visible to recycling companies and track requests as delivery progresses.</p><ol><li>Sign in as recycling company</li><li>Choose available inventory and request a quantity</li><li>Sign in as administrator to update its status</li></ol><Link to="/app/marketplace" className="text-link">Open marketplace <ArrowRight size={15} /></Link></article>
-      <article className="scenario-card"><span className="scenario-number">04</span><div className="scenario-icon"><Activity size={19} /></div><h2>Environmental monitoring</h2><p>Review recovered material by month, category, and demonstration region; export a report.</p><ol><li>Sign in as environmental officer</li><li>Review the analytical dashboard</li><li>Export a CSV or print a PDF report</li></ol><Link to="/app/analytics" className="text-link">Open impact analytics <ArrowRight size={15} /></Link></article>
+      <article className="scenario-card"><span className="scenario-number">04</span><div className="scenario-icon"><Activity size={19} /></div><h2>Environmental monitoring</h2><p>Review recovered material by month, category, and demonstration area; export a report.</p><ol><li>Sign in as environmental officer</li><li>Review the analytical dashboard</li><li>Export a CSV or print a PDF report</li></ol><Link to="/app/analytics" className="text-link">Open impact analytics <ArrowRight size={15} /></Link></article>
     </div>
     <section className="panel demo-accounts-panel"><div className="panel-header"><div><h2>Demo accounts</h2><p>Each account has access limited by its role.</p></div><span className="account-password">Password <code>PlastiTrack!2026</code></span></div><div className="demo-role-table">{roles.map((item) => <div className="demo-role-row" key={item.role}><span className="role-avatar">{roleLabel(item.role).slice(0, 1)}</span><div><strong>{roleLabel(item.role)}</strong><small>{item.description}</small></div><code>{item.email}</code><Link to="/login" className="icon-button" aria-label={`Sign in as ${roleLabel(item.role)}`}><ExternalLink size={16} /></Link></div>)}</div></section>
   </div>

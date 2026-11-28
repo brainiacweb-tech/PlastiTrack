@@ -46,7 +46,7 @@ function AppRoutes() {
           <Route path="marketplace" element={<RoleRoute roles={['ADMINISTRATOR', 'COLLECTION_PARTNER', 'RECYCLING_COMPANY', 'ENVIRONMENTAL_OFFICER']}><MarketplacePage /></RoleRoute>} />
           <Route path="analytics" element={<RoleRoute roles={['ADMINISTRATOR', 'ENVIRONMENTAL_OFFICER']}><AnalyticsPage /></RoleRoute>} />
           <Route path="notifications" element={<NotificationsPage />} />
-          <Route path="demo" element={<RoleRoute roles={['ADMINISTRATOR']}><DemoGuidePage /></RoleRoute>} />
+          <Route path="demo" element={<DemoGuidePage />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

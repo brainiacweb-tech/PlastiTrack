@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import { Activity, ArrowDown, ArrowRight, ArrowUpRight, Building2, Check, ChevronRight, Clock, Factory, Leaf, MapPin, Menu, Recycle, Radio, ShieldCheck, Sun, Truck, Waves, X } from 'lucide-react'
+import { Activity, ArrowDown, ArrowRight, ArrowUpRight, Building2, Check, ChevronRight, Clock, Factory, Leaf, MapPin, Menu, Recycle, Radio, ShieldCheck, Sun, Truck, X } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
@@ -202,14 +202,12 @@ export function PublicPage({ page }: { page?: PublicPageKey }) {
                 <div className="hero-proof"><span className="proof-icon"><ShieldCheck size={16} /></span><span>Built for clear, accountable collection operations</span></div>
               </div>
               <div className="hero-visual">
-                <div className="hero-map-label"><span className="live-dot" /> DEMO NETWORK <span>Central region</span></div>
-                <div className="map-lines"><i /><i /><i /><i /><i /></div>
-                <div className="map-watermark"><Waves size={64} /></div>
-                <div className="map-pin pin-one"><span className="pin-dot pin-green" /><span className="pin-card"><strong>PT-001</strong><small>86% · Needs collection</small></span></div>
-                <div className="map-pin pin-two"><span className="pin-dot pin-lime" /><span className="pin-card"><strong>PT-002</strong><small>52% · Filling</small></span></div>
-                <div className="map-pin pin-three"><span className="pin-dot pin-gray" /><span className="pin-card"><strong>PT-003</strong><small>23% · Device offline</small></span></div>
-                <div className="hero-stat-card"><span className="stat-label">SIMULATED BIN READING</span><strong>86<small>% capacity</small></strong><span><span className="trend-up">PT-001</span> · collection recommended</span></div>
-                <div className="hero-visual-caption">Illustrative demonstration network · Locations are not operational sites</div>
+                <img className="hero-prototype-image" src={`${import.meta.env.BASE_URL}plastitrack-prototype.png`} alt="PlastiTrack smart-bin prototype concept with a solar panel and sensor enclosure." />
+                <div className="hero-prototype-shade" />
+                <div className="hero-prototype-label"><span className="live-dot" /> PLASTITRACK PROTOTYPE <span>Kumasi, Ghana demo</span></div>
+                <div className="hero-prototype-copy"><span>FROM SMART BIN TO RECOVERY</span><h2>See the whole journey.</h2><p>Follow a simulated bin reading through collection and recycling—one clear step at a time.</p></div>
+                <div className="hero-prototype-stat"><span className="stat-label">DEMO SENSOR READING</span><strong>86<small>% full</small></strong><span>PT-001 · collection recommended</span></div>
+                <div className="hero-visual-caption">Prototype concept · simulated data · no connected hardware</div>
               </div>
             </section>
 

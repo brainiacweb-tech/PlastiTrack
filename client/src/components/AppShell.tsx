@@ -24,6 +24,7 @@ const menu = [
   { to: '/app/marketplace', label: 'Recycling marketplace', icon: Recycle, roles: ['ADMINISTRATOR', 'COLLECTION_PARTNER', 'RECYCLING_COMPANY', 'ENVIRONMENTAL_OFFICER'] as Role[] },
   { to: '/app/analytics', label: 'Impact & analytics', icon: Activity, roles: ['ADMINISTRATOR', 'ENVIRONMENTAL_OFFICER'] as Role[] },
   { to: '/app/notifications', label: 'Notifications', icon: Bell, roles: null },
+  { to: '/app/demo', label: 'System guide', icon: CircleHelp, roles: null },
 ]
 
 const pageTitles: Record<string, string> = {
@@ -33,7 +34,7 @@ const pageTitles: Record<string, string> = {
   '/app/marketplace': 'Recycling marketplace',
   '/app/analytics': 'Impact & analytics',
   '/app/notifications': 'Notifications',
-  '/app/demo': 'Demo walkthrough',
+  '/app/demo': 'System guide',
 }
 
 export function AppShell() {
@@ -70,15 +71,9 @@ export function AppShell() {
             </NavLink>
           ))}
         </nav>
-        {user?.role === 'ADMINISTRATOR' && (
-          <div className="sidebar-bottom">
-            <div className="workspace-label">DEMONSTRATION</div>
-            <NavLink to="/app/demo" onClick={() => setMobileOpen(false)} className={({ isActive }) => `nav-item ${isActive ? 'nav-item-active' : ''}`}>
-              <CircleHelp size={18} /><span>Guided demo</span>
-            </NavLink>
-            <div className="demo-sidebar-note"><ShieldCheck size={16} /> Simulation environment</div>
-          </div>
-        )}
+        <div className="sidebar-bottom">
+          <div className="demo-sidebar-note"><ShieldCheck size={16} /> Simulation environment</div>
+        </div>
         <div className="sidebar-footer">
           <div className="profile-avatar">{initials}</div>
           <div className="profile-copy"><strong>{user?.name}</strong><span>{user && roleLabel(user.role)}</span></div>
@@ -93,7 +88,7 @@ export function AppShell() {
             <div className="breadcrumb"><span>Workspace</span><span className="crumb-slash">/</span><strong>{pageTitles[location.pathname] ?? 'Overview'}</strong></div>
           </div>
           <div className="topbar-actions">
-            <span className="demo-status"><span /> Demo data</span>
+            <span className="demo-status" title="Dashboard data refreshes every five seconds; all data is simulated"><span /> Demo · refreshes every 5s</span>
             <Link to="/app/notifications" className="icon-button notification-button" aria-label="Open notifications"><Bell size={18} /></Link>
             <button className="user-dropdown" onClick={() => navigate('/app/demo')}>
               <span className="profile-avatar profile-avatar-small">{initials}</span>

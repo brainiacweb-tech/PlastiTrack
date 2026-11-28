@@ -27,6 +27,12 @@ Demo activity is saved in this browser's local storage. It is not shared with ot
 
 The browser-only demo is deployed at <https://brainiacweb-tech.github.io/PlastiTrack/>. Pushes to `main` build and deploy the client with GitHub Actions. Demo data remains in each visitor's browser; the optional Express/Prisma API is not deployed to GitHub Pages.
 
+## Vercel deployment
+
+Import this repository into Vercel and leave the project root set to the repository root. The root `vercel.json` builds the client workspace, publishes `client/dist`, and routes app deep links to the SPA entry point. No environment variables or database are needed for the browser-only demo. Git pushes to the connected repository can trigger Vercel deployments.
+
+This configuration deploys the browser demo only. The optional Express/Prisma API and PostgreSQL database are not deployed to Vercel by this setup and need a separate hosting configuration if required.
+
 ## Optional API development
 
 The Express/Prisma API is retained as a separate development component; the browser demo does not depend on it. Running the API requires PostgreSQL 15+, environment configuration, and database migrations:

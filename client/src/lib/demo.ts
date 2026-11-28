@@ -9,7 +9,7 @@ export const demoAccounts: User[] = [
   { id: 'demo-partner-user', name: 'Kwame Mensah', email: 'partner@plastitrack.demo', role: 'COLLECTION_PARTNER', region: null, collectionPartnerId: 'demo-partner', recyclingCompanyId: null },
   { id: 'demo-collector-user', name: 'Abena Boateng', email: 'collector@plastitrack.demo', role: 'WASTE_COLLECTOR', region: null, collectionPartnerId: 'demo-partner', recyclingCompanyId: null },
   { id: 'demo-recycler-user', name: 'Kofi Addo', email: 'recycler@plastitrack.demo', role: 'RECYCLING_COMPANY', region: null, collectionPartnerId: null, recyclingCompanyId: 'demo-recycler' },
-  { id: 'demo-manager', name: 'Esi Nkrumah', email: 'manager@plastitrack.demo', role: 'LOCATION_MANAGER', region: 'Central', collectionPartnerId: null, recyclingCompanyId: null },
+  { id: 'demo-manager', name: 'Esi Nkrumah', email: 'manager@plastitrack.demo', role: 'LOCATION_MANAGER', region: 'Ashanti Region', collectionPartnerId: null, recyclingCompanyId: null },
   { id: 'demo-officer', name: 'Yaw Asante', email: 'officer@plastitrack.demo', role: 'ENVIRONMENTAL_OFFICER', region: null, collectionPartnerId: null, recyclingCompanyId: null },
 ]
 
@@ -41,9 +41,9 @@ type DemoState = {
 }
 
 const demoLocations = [
-  { id: 'demo-location-central', name: 'Central Market Demo Site', region: 'Central', address: 'Demonstration location — Central', latitude: 5.5601, longitude: -0.2057 },
-  { id: 'demo-location-north', name: 'North District Demo Site', region: 'North', address: 'Demonstration location — North', latitude: 5.6148, longitude: -0.1889 },
-  { id: 'demo-location-coast', name: 'Coastal District Demo Site', region: 'Coastal', address: 'Demonstration location — Coastal', latitude: 5.535, longitude: -0.181 },
+  { id: 'demo-location-adum', name: 'Adum Market Demonstration Site', region: 'Ashanti Region', address: 'Demonstration location — Adum, Kumasi', latitude: 6.6929, longitude: -1.6244 },
+  { id: 'demo-location-bantama', name: 'Bantama Market Demonstration Site', region: 'Ashanti Region', address: 'Demonstration location — Bantama, Kumasi', latitude: 6.7055, longitude: -1.6356 },
+  { id: 'demo-location-asokwa', name: 'Asokwa Community Demonstration Site', region: 'Ashanti Region', address: 'Demonstration location — Asokwa, Kumasi', latitude: 6.665, longitude: -1.601 },
 ]
 
 const dateHoursAgo = (hours: number) => new Date(Date.now() - hours * 60 * 60 * 1000).toISOString()
@@ -52,12 +52,12 @@ const createId = (prefix: string) => `${prefix}-${crypto.randomUUID()}`
 
 function createInitialState(): DemoState {
   const binSeeds = [
-    { id: 'demo-bin-001', code: 'PT-001', name: 'Central PET Station', locationIndex: 0, category: 'PET', fillPercent: 86, capacityKg: 120, deviceStatus: 'ONLINE' },
-    { id: 'demo-bin-002', code: 'PT-002', name: 'North HDPE Point', locationIndex: 1, category: 'HDPE', fillPercent: 52, capacityKg: 100, deviceStatus: 'ONLINE' },
-    { id: 'demo-bin-003', code: 'PT-003', name: 'Coastal Mixed Plastics', locationIndex: 2, category: 'MIXED', fillPercent: 23, capacityKg: 150, deviceStatus: 'OFFLINE' },
-    { id: 'demo-bin-004', code: 'PT-004', name: 'North PP Collection', locationIndex: 1, category: 'PP', fillPercent: 93, capacityKg: 100, deviceStatus: 'ONLINE' },
-    { id: 'demo-bin-005', code: 'PT-005', name: 'Central LDPE Station', locationIndex: 0, category: 'LDPE', fillPercent: 68, capacityKg: 100, deviceStatus: 'ONLINE' },
-    { id: 'demo-bin-006', code: 'PT-006', name: 'Coastal PET Station', locationIndex: 2, category: 'PET', fillPercent: 0, capacityKg: 120, deviceStatus: 'ONLINE' },
+    { id: 'demo-bin-001', code: 'PT-001', name: 'Adum PET Collection Point', locationIndex: 0, category: 'PET', fillPercent: 86, capacityKg: 120, deviceStatus: 'ONLINE' },
+    { id: 'demo-bin-002', code: 'PT-002', name: 'Bantama HDPE Collection Point', locationIndex: 1, category: 'HDPE', fillPercent: 52, capacityKg: 100, deviceStatus: 'ONLINE' },
+    { id: 'demo-bin-003', code: 'PT-003', name: 'Asokwa Mixed Plastics Point', locationIndex: 2, category: 'MIXED', fillPercent: 23, capacityKg: 150, deviceStatus: 'OFFLINE' },
+    { id: 'demo-bin-004', code: 'PT-004', name: 'Bantama PP Collection Point', locationIndex: 1, category: 'PP', fillPercent: 93, capacityKg: 100, deviceStatus: 'ONLINE' },
+    { id: 'demo-bin-005', code: 'PT-005', name: 'Adum LDPE Collection Point', locationIndex: 0, category: 'LDPE', fillPercent: 68, capacityKg: 100, deviceStatus: 'ONLINE' },
+    { id: 'demo-bin-006', code: 'PT-006', name: 'Asokwa PET Collection Point', locationIndex: 2, category: 'PET', fillPercent: 0, capacityKg: 120, deviceStatus: 'ONLINE' },
   ]
 
   const bins: DemoBin[] = binSeeds.map((seed, index) => {
@@ -90,13 +90,13 @@ function createInitialState(): DemoState {
     ],
     inventory: [{ id: 'demo-inventory-001', category: 'PET', quantityKg: 42, availableKg: 42, collectedAt: completedAt, binId: 'demo-bin-006' }],
     requests: [],
-    records: [{ id: 'demo-record-001', taskId: 'demo-task-completed', quantityKg: 42, completedAt, completedById: collector.userId ?? '', category: 'PET', region: 'Coastal' }],
+    records: [{ id: 'demo-record-001', taskId: 'demo-task-completed', quantityKg: 42, completedAt, completedById: collector.userId ?? '', category: 'PET', region: 'Ashanti Region' }],
     notifications: [
       { id: 'demo-notification-admin', userId: 'demo-admin', title: 'PT-004 needs collection', message: 'A simulated bin reading is above the collection threshold.', href: '/app/bins', readAt: null, createdAt: dateHoursAgo(1) },
       { id: 'demo-notification-partner', userId: 'demo-partner-user', title: 'Collection task needs attention', message: 'PT-004 is ready for partner review.', href: '/app/collections', readAt: null, createdAt: dateHoursAgo(2) },
       { id: 'demo-notification-collector', userId: 'demo-collector-user', title: 'New collection task assigned', message: 'You have been assigned to PT-001.', href: '/app/collections', readAt: null, createdAt: dateHoursAgo(5) },
       { id: 'demo-notification-recycler', userId: 'demo-recycler-user', title: 'Recovered material available', message: '42 kg of PET plastic is ready to review.', href: '/app/marketplace', readAt: null, createdAt: dateDaysAgo(2) },
-      { id: 'demo-notification-manager', userId: 'demo-manager', title: 'Central site status', message: 'A simulated collection task is active in your region.', href: '/app/bins', readAt: null, createdAt: dateHoursAgo(3) },
+      { id: 'demo-notification-manager', userId: 'demo-manager', title: 'Adum site status', message: 'A simulated collection task is active in your region.', href: '/app/bins', readAt: null, createdAt: dateHoursAgo(3) },
       { id: 'demo-notification-officer', userId: 'demo-officer', title: 'Demo data is ready', message: 'Review simulated recovery trends in the analytics workspace.', href: '/app/analytics', readAt: null, createdAt: dateDaysAgo(1) },
     ],
   }
@@ -118,7 +118,53 @@ function readState(): DemoState {
       'records' in parsed && Array.isArray(parsed.records) &&
       'notifications' in parsed && Array.isArray(parsed.notifications)
     ) {
-      return parsed as DemoState
+      const state = parsed as DemoState
+      let migrated = false
+      const oldLocations: Record<string, (typeof demoLocations)[number]> = {
+        'Central Market Demo Site': demoLocations[0],
+        'North District Demo Site': demoLocations[1],
+        'Coastal District Demo Site': demoLocations[2],
+      }
+      const oldBinNames: Record<string, string> = {
+        'Central PET Station': 'Adum PET Collection Point',
+        'North HDPE Point': 'Bantama HDPE Collection Point',
+        'Coastal Mixed Plastics': 'Asokwa Mixed Plastics Point',
+        'North PP Collection': 'Bantama PP Collection Point',
+        'Central LDPE Station': 'Adum LDPE Collection Point',
+        'Coastal PET Station': 'Asokwa PET Collection Point',
+      }
+      for (const bin of state.bins) {
+        const location = oldLocations[bin.location.name]
+        if (location) {
+          bin.location = {
+            name: location.name,
+            region: location.region,
+            address: location.address,
+            latitude: location.latitude,
+            longitude: location.longitude,
+          }
+          migrated = true
+        }
+        const name = oldBinNames[bin.name]
+        if (name) {
+          bin.name = name
+          migrated = true
+        }
+      }
+      for (const record of state.records) {
+        if (['Central', 'North', 'Coastal'].includes(record.region)) {
+          record.region = 'Ashanti Region'
+          migrated = true
+        }
+      }
+      for (const notification of state.notifications) {
+        if (notification.title === 'Central site status') {
+          notification.title = 'Adum site status'
+          migrated = true
+        }
+      }
+      if (migrated) saveState(state)
+      return state
     }
   } catch (error) {
     console.warn('Saved PlastiTrack demo data was unreadable; restoring the starter scenario.', error)
@@ -207,7 +253,7 @@ function expandTask(state: DemoState, task: DemoTask): CollectionTask {
     createdAt: task.createdAt,
     bin: copy(bin),
     collector: collector ? { id: collector.id, name: collector.name, userId: collector.userId } : null,
-    partner: { name: 'Green Route Demo Partner' },
+    partner: { name: 'Asante Green Route' },
   }
 }
 
@@ -224,7 +270,7 @@ function expandRequest(state: DemoState, request: DemoRequest) {
     status: request.status,
     createdAt: request.createdAt,
     inventory: expandInventory(state, inventory),
-    company: { name: 'Circular Materials Demo Co.' },
+    company: { name: 'Kumasi Circular Materials' },
   }
 }
 
@@ -232,7 +278,7 @@ function currentBins(state: DemoState, user: User) {
   const assignedBinIds = state.tasks.filter((task) => task.assignedToId === user.id).map((task) => task.binId)
   return state.bins.filter((bin) => {
     if (user.role === 'WASTE_COLLECTOR') return assignedBinIds.includes(bin.id)
-    if (user.role === 'COLLECTION_PARTNER') return bin.location.region === 'Central'
+    if (user.role === 'COLLECTION_PARTNER') return bin.location.region === 'Ashanti Region'
     if (user.role === 'LOCATION_MANAGER') return bin.location.region === user.region
     return true
   })
